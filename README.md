@@ -1,11 +1,10 @@
-# EE478_TEAM5
-## Selfie Drone
-### Pose Estimation
+# EE478 Final Project : Selfie Drone
+## Pose Estimation
 
-### Visual Odometry
+## Visual Odometry
 
-### Mission Planner
+## Mission Planner
 
-### Control
+## Control
 
-### ETC
+## ETC
