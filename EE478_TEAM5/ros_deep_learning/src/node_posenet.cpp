@@ -72,53 +72,71 @@ float estimate_gesture(poseNet::ObjectPose pose, int img_width, int img_height)
 	 * -- 17: neck
 	 
 	 */
-	int neck_id = 17;
+	int right_shoulder_id = 6;
 	int left_wrist_id = 9;
 	int right_wrist_id = 10;
+	int right_ankle_id = 16;
+	int left_knee_id = 13;
 
-	double neck_pixel_y = -1;
+	double right_shoulder_pixel_y = -1;
 	double left_wrist_pixel_y = -1;
 	double right_wrist_pixel_y = -1;
+	double right_ankle_pixel_y = -1;
+	double left_knee_pixel_y = -1;
 
 	for (auto keypoint : pose.Keypoints) {
-		// nose keypoint
-		if (keypoint.ID == neck_id) {
-			// LogInfo("Keypoint (Nose) x: %i y: %i in image", keypoint.x, keypoint.y);
-			neck_pixel_y = keypoint.y / img_height;
-      
+		// neck keypoint
+		if (keypoint.ID == right_shoulder_id) {
+			// LogInfo("Keypoint (Neck) x: %i y: %i in image", keypoint.x, keypoint.y);
+			right_shoulder_pixel_y = keypoint.y / img_height;
 		}
 		// left_wrist keypoint
 		if (keypoint.ID == left_wrist_id) {
 			// LogInfo("Keypoint (Left Wrist) x: %i y: %i in image", keypoint.x, keypoint.y);
 			left_wrist_pixel_y = keypoint.y / img_height;
 		}
-
+		// right_wrist keypoint
 		if (keypoint.ID == right_wrist_id) {
 			// LogInfo("Keypoint (Right Wrist) x: %i y: %i in image", keypoint.x, keypoint.y);
 			right_wrist_pixel_y = keypoint.y / img_height;
 		}
+		// right_ankle keypoint
+		if (keypoint.ID == right_ankle_id) {
+			// LogInfo("Keypoint (Right Ankle) x: %i y: %i in image", keypoint.x, keypoint.y);
+			right_ankle_pixel_y = keypoint.y / img_height;
+		}
+		// left_knee keypoint
+		if (keypoint.ID == left_knee_id) {
+			// LogInfo("Keypoint (Left knee) x: %i y: %i in image", keypoint.x, keypoint.y);
+			left_knee_pixel_y = keypoint.y / img_height;
+		}
 	}
 
 	// Check keypoint data condition
-	bool is_got_all_data = (neck_pixel_y != -1) && (left_wrist_pixel_y != -1) && (right_wrist_pixel_y != -1);
+	bool is_got_all_data = (right_shoulder_pixel_y != -1) && (left_wrist_pixel_y != -1) && (right_wrist_pixel_y != -1) && (right_ankle_pixel_y != -1) && (left_knee_pixel_y != -1);
 	// Determine the gesture
 	// 0: nothing
 	// 1: left hand up
 	// 2: right hand up
 	// 3: both hand up
+	// 4: right leg up
 	float gesture_id = 0; // nothing
 
 	if (is_got_all_data) {
-		if ((left_wrist_pixel_y < neck_pixel_y) && (right_wrist_pixel_y > neck_pixel_y)) {
+		if ((left_wrist_pixel_y < right_shoulder_pixel_y) && (right_wrist_pixel_y > right_shoulder_pixel_y)) {
 			gesture_id = 1; // left hand up
 		}
 
-		if ((left_wrist_pixel_y > neck_pixel_y) && (right_wrist_pixel_y < neck_pixel_y)) {
+		if ((left_wrist_pixel_y > right_shoulder_pixel_y) && (right_wrist_pixel_y < right_shoulder_pixel_y)) {
 			gesture_id = 2; //right hand up
 		}
 
-		if ((left_wrist_pixel_y < neck_pixel_y) && (right_wrist_pixel_y < neck_pixel_y)) {
+		if ((left_wrist_pixel_y < right_shoulder_pixel_y) && (right_wrist_pixel_y < right_shoulder_pixel_y)) {
 			gesture_id = 3; //both hand up
+		}
+
+		if (right_ankle_pixel_y < left_knee_pixel_y) {
+			gesture_id = 4; // right leg up
 		}
 	}
 
@@ -165,7 +183,7 @@ float get_body_length(poseNet::ObjectPose pose, int img_width, int img_height)
 	// Check keypoint data condition
 	bool is_got_all_data = (left_shoulder_pixel_y != -1) && (left_hip_pixel_y != -1);
 
-	float body_length = 1;
+	float body_length = 0.3;
 
 	if (is_got_all_data) {
 		body_length = left_hip_pixel_y - left_shoulder_pixel_y;
