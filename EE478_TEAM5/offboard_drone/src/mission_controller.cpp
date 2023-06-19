@@ -20,6 +20,13 @@ float home_x = 0.0;
 float home_y = 0.0;
 float home_z = 1.0;
 
+float cur_image_x = 0.5;
+float cur_image_y = 0.5;
+float cur_image_height = 0.3;
+
+bool mission_complete = true;
+int mission_mode = 0;
+// 0 = default, 1 = move to target, 2 = move to home, 3 = take picture, 4: draw heart
 
 bool is_takeoff = false;
 bool is_taken = false;
@@ -45,147 +52,205 @@ void gesture_Callback(const std_msgs::Float32MultiArray::ConstPtr& msg)
 void run()
 {
     int num_person = data.size()/4;
-    
-    int index = -1;
 
-    int mission_mode = 0; // 0 = default, 1 = move to target, 
-                     // 2 = move to home, 3 = take picture
-
-    // check gesture
+    float cur_x, cur_y, cur_z;
 
     for (int i = 0; i < num_person; ++i) {
         if (data[4*i] == 1.0) // left hand = 1
         {
-            mission_mode = 1;
+            if (mission_complete){
+                mission_mode = 1;
+                mission_complete = false;
+            }
+            
             break;
         }
         else if (data[4*i] == 2.0) // right hand = 2
         {
-            mission_mode = 2;
-            index = i;
+            cur_image_x = data[4*i+1];
+            cur_image_y = data[4*i+2];
+            cur_image_height = data[4*i+3];
+
+            if (mission_complete){
+                mission_mode = 2;
+                mission_complete = false;
+            }
+
             break;
         }
         else if (data[4*i] == 3) // both hand = 3
         {
-            mission_mode = 3;
+            if (mission_complete) {
+                mission_mode = 3;
+                mission_complete = false;
+                is_taken = false;
+            }
+            
+            break;
+        }
+
+        else if (data[4*i] == 4) // 
+        {
+            if (mission_complete) {
+                mission_mode = 4;
+                misssion_complete = false;
+            }
+            
             break;
         }
         else continue;
     }
 
-    float cur_x, cur_y, cur_height, cur_z;
+    
     float velocity_x, velocity_y, velocity_z;
     
-    if(mission_mode == 0)
+    if (mission_mode == 0)
     {
         setpoint_vel.twist.linear.x = 0;
-	setpoint_vel.twist.linear.y = 0;
-	setpoint_vel.twist.linear.z = 0;
-	local_vel_pub.publish(setpoint_vel);
-
+	    setpoint_vel.twist.linear.y = 0;
+	    setpoint_vel.twist.linear.z = 0;
+	    local_vel_pub.publish(setpoint_vel);
     }
 
-    if (mission_mode == 2)
+    else if (mission_mode == 1)
+    {
+        home_x = 0.0;
+        home_y = 0.0;
+        home_z = 1.0;
+
+        cur_x = cur_pose.pose.position.x;
+        cur_y = cur_pose.pose.position.y;
+        cur_z = cur_pose.pose.position.z;
+
+        if ((std::abs(home_x - cur_x) < 0.2) && (std::abs(home_y - cur_y) < 0.2) && (std::abs(home_z - cur_z) < 0.2)){
+            mission_complete = true;
+            mission_mode = 0;
+
+            setpoint_vel.twist.linear.x = 0;
+            setpoint_vel.twist.linear.y = 0;
+            setpoint_vel.twist.linear.z = 0;
+            local_vel_pub.publish(setpoint_vel);
+        }
+
+        else {
+            velocity_x = 7.5* (home_x - cur_x);
+            velocity_y = 4* (home_y - cur_y);
+            velocity_z = 1.5* (home_z - cur_z);
+    
+            if(velocity_x > 0.3){
+                velocity_x = 0.3;
+            }
+            if(velocity_x < -0.3){
+                velocity_x = -0.3; 
+            }
+        
+            if(velocity_y > 0.3){
+                velocity_y = 0.3;
+            }
+            if(velocity_y < -0.3){
+                velocity_y = -0.3;
+            }
+
+            if(velocity_z > 0.3){
+                velocity_z = 0.3;
+            }
+            if(velocity_z < -0.3){
+                velocity_z = -0.3;
+            }
+
+
+            ROS_INFO("mission mode 2.");
+            ROS_INFO("v_x: %f , v_y: %f, v_z: %f .", velocity_x, velocity_y, velocity_z);
+    
+            setpoint_vel.twist.linear.x = velocity_x;
+            setpoint_vel.twist.linear.y = velocity_y;
+            setpoint_vel.twist.linear.z = velocity_z;
+
+            local_vel_pub.publish(setpoint_vel);
+        }
+    }
+
+    else if (mission_mode == 2)
     {
 
         float target_x = 0.5;
         float target_y = 0.5;
-        float target_height = 0.15;
+        float target_height = 0.3;
 
-        cur_x = data[4*index+1];
-        cur_y = data[4*index+2];
-        cur_height = data[4*index+3];
-	
-        velocity_x = -7.5* (cur_height - target_height);
-        velocity_y = 4* (cur_x - target_x);
-        velocity_z = -1.5* (cur_y - target_y);
+        if ((std::abs(target_x - cur_image_x) < 0.05) && (std::abs(target_y - cur_image_y) < 0.05) && (std::abs(target_height - cur_image_height) < 0.05)){
+            mission_complete = true;
+            mission_mode = 0;
 
-	if(velocity_x > 0.3)
-		velocity_x = 0.3;
-	if(velocity_x < -0.3)
-		velocity_x = -0.3;
+            setpoint_vel.twist.linear.x = 0;
+            setpoint_vel.twist.linear.y = 0;
+            setpoint_vel.twist.linear.z = 0;
+            local_vel_pub.publish(setpoint_vel);
+        }
 
+        else{
+            velocity_x = -7.5* (cur_image_height - target_height);
+            velocity_y = 4* (cur_image_x - target_x);
+            velocity_z = -1.5* (cur_image_y - target_y);
 
-	if(velocity_y > 0.3)
-		velocity_y = 0.3;
-	if(velocity_y < -0.3)
-		velocity_y = -0.3;
+            if(velocity_x > 0.3){
+                velocity_x = 0.3;
+            }
+            if(velocity_x < -0.3){
+                velocity_x = -0.3; 
+            }
+        
+            if(velocity_y > 0.3){
+                velocity_y = 0.3;
+            }
+            if(velocity_y < -0.3){
+                velocity_y = -0.3;
+            }
 
-	if(velocity_z > 0.3)
-		velocity_z = 0.3;
-	if(velocity_z < -0.3)
-		velocity_z = -0.3;
+            if(velocity_z > 0.3){
+                velocity_z = 0.3;
+            }
+            if(velocity_z < -0.3){
+                velocity_z = -0.3;
+            }
+        
+            // velocity control
+            ROS_INFO("mission mode 1.");
+            ROS_INFO("v_x: %f , v_y: %f, v_z: %f .", velocity_x, velocity_y, velocity_z);
 
-        // velocity control
-        ROS_INFO("mission mode 1.");
-        ROS_INFO("v_x: %f , v_y: %f, v_z: %f .", velocity_x, velocity_y, velocity_z);
+            setpoint_vel.twist.linear.x = velocity_x;
+            setpoint_vel.twist.linear.y = velocity_y;
+            setpoint_vel.twist.linear.z = velocity_z;
 
-	is_taken = false;
-
-	setpoint_vel.twist.linear.x = velocity_x;
-	setpoint_vel.twist.linear.y = velocity_y;
-	setpoint_vel.twist.linear.z = velocity_z;
-
-	local_vel_pub.publish(setpoint_vel);
+            local_vel_pub.publish(setpoint_vel);
+        }
     }
-    else if (mission_mode == 1)
-    {
-        home_x = 0.0;
-	home_y = 0.0;
-	home_z = 1.0;
 
-        cur_x = cur_pose.pose.position.x;
-        cur_y = cur_pose.pose.position.y;
-        cur_z = cur_pose.pose.position.z; 
-
-	velocity_x = 7.5* (home_x - cur_x);
-        velocity_y = 4* (home_y - cur_y);
-        velocity_z = 1.5* (home_z - cur_z);
-	
-	if(velocity_x > 0.3)
-		velocity_x = 0.3;
-	if(velocity_x < -0.3)
-		velocity_x = -0.3;
-
-
-	if(velocity_y > 0.3)
-		velocity_y = 0.3;
-	if(velocity_y < -0.3)
-		velocity_y = -0.3;
-
-	if(velocity_z > 0.3)
-		velocity_z = 0.3;
-	if(velocity_z < -0.3)
-		velocity_z = -0.3;
-
-
-        ROS_INFO("mission mode 2.");
-	ROS_INFO("v_x: %f , v_y: %f, v_z: %f .", velocity_x, velocity_y, velocity_z);
-	setpoint_vel.twist.linear.x = velocity_x;
-	setpoint_vel.twist.linear.y = velocity_y;
-	setpoint_vel.twist.linear.z = velocity_z;
-
-	local_vel_pub.publish(setpoint_vel);
-	is_taken = false;
-
-    }
     else if (mission_mode == 3)
     {
         // take a picture
         setpoint_vel.twist.linear.x = 0;
-	setpoint_vel.twist.linear.y = 0;
-	setpoint_vel.twist.linear.z = 0;
+	    setpoint_vel.twist.linear.y = 0;
+	    setpoint_vel.twist.linear.z = 0;
 
-	local_vel_pub.publish(setpoint_vel);
-	ROS_INFO("mission mode 3.");
-	if(!is_taken){
-		std_srvs::SetBool hands_up;
-		hands_up.request.data = true;
-		take_picture_client.call(hands_up);
-		is_taken=true;
-	}
+	    local_vel_pub.publish(setpoint_vel);
 	
+        ROS_INFO("mission mode 3.");
+
+	    if(!is_taken){
+            std_srvs::SetBool hands_up;
+            hands_up.request.data = true;
+            take_picture_client.call(hands_up);
+            is_taken = true;
+            misssion_complete = true;
+            mission_mode = 0;
+	    }
     }
+
+    else if (mission_mode == 4)
+    {
+        
+    }
+
     else ROS_INFO("mission mode 0.");
 }
 
@@ -292,3 +357,4 @@ int main(int argc, char **argv)
 
     return 0;
 }
+
