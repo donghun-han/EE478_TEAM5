@@ -241,7 +241,7 @@ void run()
             {0.0, -0.22},  {0.15, -0.1},   {0.25, 0.0},
             {0.3, 0.1},    {0.25, 0.25},   {0.12, 0.3},   {0.0, 0.2}};
 
-        scale_factor = 2
+        double scale_factor = 2.0;
 
         for( auto waypoint : heart_points)
         {
@@ -278,9 +278,23 @@ void run()
             local_vel_pub.publish(setpoint_vel);
 
             // check if the current position is close enough to the target position
-            if ( abs(temp_target_y - cur_y) < 0.05 and abs(temp_target_z - cur_z) < 0.05){
-                break
+            if (std::abs(temp_target_y - cur_y) < 0.05 && std::abs(temp_target_z - cur_z) < 0.05)
+            {
+                // pause for a moment before moving to the next target position
+                ros::Rate loop_rate(10); // 10 Hz
+                for (int i = 0; i < 10; ++i)
+                {
+                    if (rospy.is_shutdown())
+                        break;
+
+                    loop_rate.sleep();
+                }
+                
+                break;
             }
+
+
+
         }
 
     }
