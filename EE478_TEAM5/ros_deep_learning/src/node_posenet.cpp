@@ -79,6 +79,9 @@ float estimate_gesture(poseNet::ObjectPose pose, int img_width, int img_height)
 	double neck_pixel_y = -1;
 	double left_wrist_pixel_y = -1;
 	double right_wrist_pixel_y = -1;
+	double left_hip = -1;
+	double right_knee = -1;
+
 
 	for (auto keypoint : pose.Keypoints) {
 		// nose keypoint
@@ -96,6 +99,12 @@ float estimate_gesture(poseNet::ObjectPose pose, int img_width, int img_height)
 		if (keypoint.ID == right_wrist_id) {
 			// LogInfo("Keypoint (Right Wrist) x: %i y: %i in image", keypoint.x, keypoint.y);
 			right_wrist_pixel_y = keypoint.y / img_height;
+		}
+		if (keypoint.ID == left_hip){
+			left_hip_pixel_y = keypoint.y / img_height;
+		}
+		if (keypoint.ID == right_knee){
+			right_knee_pixel_y = keypoint.y / img_height;
 		}
 	}
 
@@ -119,6 +128,10 @@ float estimate_gesture(poseNet::ObjectPose pose, int img_width, int img_height)
 
 		if ((left_wrist_pixel_y < neck_pixel_y) && (right_wrist_pixel_y < neck_pixel_y)) {
 			gesture_id = 3; //both hand up
+		}
+
+		if ((left_hip_pixel_y > right_knee_pixel_y)) {
+			gesture_id = 4; 
 		}
 	}
 

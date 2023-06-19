@@ -70,6 +70,11 @@ void run()
             mission_mode = 3;
             break;
         }
+        else if (data[4*i] == 4) // propose pose 
+        {
+            mission_mode = 4;
+            break;
+        }
         else continue;
     }
 
@@ -79,9 +84,9 @@ void run()
     if(mission_mode == 0)
     {
         setpoint_vel.twist.linear.x = 0;
-	setpoint_vel.twist.linear.y = 0;
-	setpoint_vel.twist.linear.z = 0;
-	local_vel_pub.publish(setpoint_vel);
+        setpoint_vel.twist.linear.y = 0;
+        setpoint_vel.twist.linear.z = 0;
+        local_vel_pub.publish(setpoint_vel);
 
     }
 
@@ -100,91 +105,180 @@ void run()
         velocity_y = 4* (cur_x - target_x);
         velocity_z = -1.5* (cur_y - target_y);
 
-	if(velocity_x > 0.3)
-		velocity_x = 0.3;
-	if(velocity_x < -0.3)
-		velocity_x = -0.3;
+        if(velocity_x > 0.3)
+            velocity_x = 0.3;
+        if(velocity_x < -0.3)
+            velocity_x = -0.3;
 
 
-	if(velocity_y > 0.3)
-		velocity_y = 0.3;
-	if(velocity_y < -0.3)
-		velocity_y = -0.3;
+        if(velocity_y > 0.3)
+            velocity_y = 0.3;
+        if(velocity_y < -0.3)
+            velocity_y = -0.3;
 
-	if(velocity_z > 0.3)
-		velocity_z = 0.3;
-	if(velocity_z < -0.3)
-		velocity_z = -0.3;
+        if(velocity_z > 0.3)
+            velocity_z = 0.3;
+        if(velocity_z < -0.3)
+            velocity_z = -0.3;
 
         // velocity control
         ROS_INFO("mission mode 1.");
         ROS_INFO("v_x: %f , v_y: %f, v_z: %f .", velocity_x, velocity_y, velocity_z);
 
-	is_taken = false;
+        is_taken = false;
 
-	setpoint_vel.twist.linear.x = velocity_x;
-	setpoint_vel.twist.linear.y = velocity_y;
-	setpoint_vel.twist.linear.z = velocity_z;
+        setpoint_vel.twist.linear.x = velocity_x;
+        setpoint_vel.twist.linear.y = velocity_y;
+        setpoint_vel.twist.linear.z = velocity_z;
 
-	local_vel_pub.publish(setpoint_vel);
+        local_vel_pub.publish(setpoint_vel);
     }
     else if (mission_mode == 1)
     {
         home_x = 0.0;
-	home_y = 0.0;
-	home_z = 1.0;
+        home_y = 0.0;
+        home_z = 1.0;
 
         cur_x = cur_pose.pose.position.x;
         cur_y = cur_pose.pose.position.y;
         cur_z = cur_pose.pose.position.z; 
 
-	velocity_x = 7.5* (home_x - cur_x);
+        velocity_x = 7.5* (home_x - cur_x);
         velocity_y = 4* (home_y - cur_y);
         velocity_z = 1.5* (home_z - cur_z);
 	
-	if(velocity_x > 0.3)
-		velocity_x = 0.3;
-	if(velocity_x < -0.3)
-		velocity_x = -0.3;
+        if(velocity_x > 0.3)
+            velocity_x = 0.3;
+        if(velocity_x < -0.3)
+            velocity_x = -0.3;
 
 
-	if(velocity_y > 0.3)
-		velocity_y = 0.3;
-	if(velocity_y < -0.3)
-		velocity_y = -0.3;
+        if(velocity_y > 0.3)
+            velocity_y = 0.3;
+        if(velocity_y < -0.3)
+            velocity_y = -0.3;
 
-	if(velocity_z > 0.3)
-		velocity_z = 0.3;
-	if(velocity_z < -0.3)
-		velocity_z = -0.3;
-
+        if(velocity_z > 0.3)
+            velocity_z = 0.3;
+        if(velocity_z < -0.3)
+            velocity_z = -0.3;
 
         ROS_INFO("mission mode 2.");
-	ROS_INFO("v_x: %f , v_y: %f, v_z: %f .", velocity_x, velocity_y, velocity_z);
-	setpoint_vel.twist.linear.x = velocity_x;
-	setpoint_vel.twist.linear.y = velocity_y;
-	setpoint_vel.twist.linear.z = velocity_z;
+        ROS_INFO("v_x: %f , v_y: %f, v_z: %f .", velocity_x, velocity_y, velocity_z);
+        setpoint_vel.twist.linear.x = velocity_x;
+        setpoint_vel.twist.linear.y = velocity_y;
+        setpoint_vel.twist.linear.z = velocity_z;
 
-	local_vel_pub.publish(setpoint_vel);
-	is_taken = false;
+        local_vel_pub.publish(setpoint_vel);
+        is_taken = false;
 
     }
     else if (mission_mode == 3)
     {
         // take a picture
         setpoint_vel.twist.linear.x = 0;
-	setpoint_vel.twist.linear.y = 0;
-	setpoint_vel.twist.linear.z = 0;
+        setpoint_vel.twist.linear.y = 0;
+        setpoint_vel.twist.linear.z = 0;
 
-	local_vel_pub.publish(setpoint_vel);
-	ROS_INFO("mission mode 3.");
-	if(!is_taken){
-		std_srvs::SetBool hands_up;
-		hands_up.request.data = true;
-		take_picture_client.call(hands_up);
-		is_taken=true;
+        local_vel_pub.publish(setpoint_vel);
+        ROS_INFO("mission mode 3.");
+        if(!is_taken){
+            std_srvs::SetBool hands_up;
+            hands_up.request.data = true;
+            take_picture_client.call(hands_up);
+            is_taken=true;
 	}
 	
+    else if (mission_mode ==4)
+    {
+        // return to home first (but home_z=1.5)
+        home_x = 0.0;
+        home_y = 0.0;
+        home_z = 1.5;
+
+        cur_x = cur_pose.pose.position.x;
+        cur_y = cur_pose.pose.position.y;
+        cur_z = cur_pose.pose.position.z; 
+
+        velocity_x = 7.5* (home_x - cur_x);
+        velocity_y = 4* (home_y - cur_y);
+        velocity_z = 1.5* (home_z - cur_z);
+	
+        if(velocity_x > 0.3)
+            velocity_x = 0.3;
+        if(velocity_x < -0.3)
+            velocity_x = -0.3;
+
+        if(velocity_y > 0.3)
+            velocity_y = 0.3;
+        if(velocity_y < -0.3)
+            velocity_y = -0.3;
+
+        if(velocity_z > 0.3)
+            velocity_z = 0.3;
+        if(velocity_z < -0.3)
+            velocity_z = -0.3;
+
+        ROS_INFO("mission mode 4.");
+        ROS_INFO("v_x: %f , v_y: %f, v_z: %f .", velocity_x, velocity_y, velocity_z);
+        setpoint_vel.twist.linear.x = velocity_x;
+        setpoint_vel.twist.linear.y = velocity_y;
+        setpoint_vel.twist.linear.z = velocity_z;
+
+        local_vel_pub.publish(setpoint_vel);
+        //is_taken = false; 
+
+
+        // draw heart
+        heart_points = [(0.0, 0.2),(-0.12, 0.3),(-0.25, 0.25),
+                        (-0.3, 0.1),(-0.25, 0.0),(-0.15, -0.1),
+                        (0.0, -0.22),(0.15, -0.1),(0.25, 0.0),
+                        (0.3, 0.1),(0.25, 0.25),(0.12, 0.3),(0.0, 0.2)]
+        
+        std::vector<std::pair<double, double>> heart_points = {
+            {0.0, 0.2},    {-0.12, 0.3},   {-0.25, 0.25},
+            {-0.3, 0.1},   {-0.25, 0.0},   {-0.15, -0.1},
+            {0.0, -0.22},  {0.15, -0.1},   {0.25, 0.0},
+            {0.3, 0.1},    {0.25, 0.25},   {0.12, 0.3},   {0.0, 0.2}};
+
+        scale_factor = 2
+
+        for( auto waypoint : heart_points)
+        {
+            // set a new target point
+            double temp_target_y = waypoint.first * scale_factor + home_y;
+            double temp_target_z = waypoint.second * scale_factor + home_z;
+
+            
+            // set velocity
+            cur_x = cur_pose.pose.position.x;
+            cur_y = cur_pose.pose.position.y;
+            cur_z = cur_pose.pose.position.z; 
+
+            velocity_x = 0;
+            velocity_y = 4* (temp_target_y - cur_y);
+            velocity_z = 1.5* (temp_target_z - cur_z);
+
+            if(velocity_y > 0.3)
+                velocity_y = 0.3;
+            if(velocity_y < -0.3)
+                velocity_y = -0.3;
+
+            if(velocity_z > 0.3)
+                velocity_z = 0.3;
+            if(velocity_z < -0.3)
+                velocity_z = -0.3;
+
+            ROS_INFO("drawing a ♥");
+            ROS_INFO("v_x: %f , v_y: %f, v_z: %f .", velocity_x, velocity_y, velocity_z);
+            setpoint_vel.twist.linear.x = velocity_x;
+            setpoint_vel.twist.linear.y = velocity_y;
+            setpoint_vel.twist.linear.z = velocity_z;
+
+            local_vel_pub.publish(setpoint_vel);
+        }
+
+    }
     }
     else ROS_INFO("mission mode 0.");
 }
