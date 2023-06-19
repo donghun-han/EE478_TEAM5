@@ -284,12 +284,12 @@ void run()
                 ros::Rate loop_rate(10); // 10 Hz
                 for (int i = 0; i < 10; ++i)
                 {
-                    if (rospy.is_shutdown())
+                    if (ros::isShuttingDown())
                         break;
 
                     loop_rate.sleep();
                 }
-                
+
                 break;
             }
 
