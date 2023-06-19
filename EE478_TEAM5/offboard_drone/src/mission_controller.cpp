@@ -276,6 +276,11 @@ void run()
             setpoint_vel.twist.linear.z = velocity_z;
 
             local_vel_pub.publish(setpoint_vel);
+
+            // check if the current position is close enough to the target position
+            if ( abs(temp_target_y - cur_y) < 0.05 and abs(temp_target_z - cur_z) < 0.05){
+                break
+            }
         }
 
     }
