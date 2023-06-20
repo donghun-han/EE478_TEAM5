@@ -47,8 +47,29 @@ void gesture_Callback(const std_msgs::Float32MultiArray::ConstPtr& msg)
 {
     // mesaage to data
     data = msg->data;
+}
 
+void Regulate_velocity(double& velocity_x, double& velocity_y, double& velocity_z){
+    if(velocity_x > 0.3){
+        velocity_x = 0.3;
+    }
+    if(velocity_x < -0.3){
+        velocity_x = -0.3; 
+    }
 
+    if(velocity_y > 0.3){
+        velocity_y = 0.3;
+    }
+    if(velocity_y < -0.3){
+        velocity_y = -0.3;
+    }
+
+    if(velocity_z > 0.3){
+        velocity_z = 0.3;
+    }
+    if(velocity_z < -0.3){
+        velocity_z = -0.3;
+    }
 }
 
 void run()
@@ -138,27 +159,8 @@ void run()
             velocity_x = 7.5* (home_x - cur_x);
             velocity_y = 4* (home_y - cur_y);
             velocity_z = 1.5* (home_z - cur_z);
-    
-            if(velocity_x > 0.3){
-                velocity_x = 0.3;
-            }
-            if(velocity_x < -0.3){
-                velocity_x = -0.3; 
-            }
-        
-            if(velocity_y > 0.3){
-                velocity_y = 0.3;
-            }
-            if(velocity_y < -0.3){
-                velocity_y = -0.3;
-            }
 
-            if(velocity_z > 0.3){
-                velocity_z = 0.3;
-            }
-            if(velocity_z < -0.3){
-                velocity_z = -0.3;
-            }
+	    Regulate_velocity(velocity_x, velocity_y, velocity_z)
 
 
             ROS_INFO("mission mode 2.");
@@ -193,27 +195,8 @@ void run()
             velocity_x = -7.5* (cur_image_height - target_height);
             velocity_y = 4* (cur_image_x - target_x);
             velocity_z = -1.5* (cur_image_y - target_y);
+	    Regulate_velocity(velocity_x, velocity_y, velocity_z)
 
-            if(velocity_x > 0.3){
-                velocity_x = 0.3;
-            }
-            if(velocity_x < -0.3){
-                velocity_x = -0.3; 
-            }
-        
-            if(velocity_y > 0.3){
-                velocity_y = 0.3;
-            }
-            if(velocity_y < -0.3){
-                velocity_y = -0.3;
-            }
-
-            if(velocity_z > 0.3){
-                velocity_z = 0.3;
-            }
-            if(velocity_z < -0.3){
-                velocity_z = -0.3;
-            }
         
             // velocity control
             ROS_INFO("mission mode 1.");
@@ -264,21 +247,9 @@ void run()
             velocity_x = 7.5* (home_x - cur_x);
             velocity_y = 4* (home_y - cur_y);
             velocity_z = 1.5* (home_z - cur_z);
+
+	    Regulate_velocity(velocity_x, velocity_y, velocity_z)
         
-            if(velocity_x > 0.3)
-                velocity_x = 0.3;
-            if(velocity_x < -0.3)
-                velocity_x = -0.3;
-
-            if(velocity_y > 0.3)
-                velocity_y = 0.3;
-            if(velocity_y < -0.3)
-                velocity_y = -0.3;
-
-            if(velocity_z > 0.3)
-                velocity_z = 0.3;
-            if(velocity_z < -0.3)
-                velocity_z = -0.3;
 
             ROS_INFO("mission mode 4.");
             ROS_INFO("v_x: %f , v_y: %f, v_z: %f .", velocity_x, velocity_y, velocity_z);
@@ -318,7 +289,6 @@ void run()
             	setpoint_vel.twist.linear.z = 0;
             	local_vel_pub.publish(setpoint_vel);
             }
-		    
             else
             {
                 std::pair<double,double> waypoint = heart_points[heart_idx];
@@ -335,15 +305,7 @@ void run()
                 velocity_y = 4* (temp_target_y - cur_y);
                 velocity_z = 1.5* (temp_target_z - cur_z);
 
-                if(velocity_y > 0.3)
-                    velocity_y = 0.3;
-                if(velocity_y < -0.3)
-                    velocity_y = -0.3;
-
-                if(velocity_z > 0.3)
-                    velocity_z = 0.3;
-                if(velocity_z < -0.3)
-                    velocity_z = -0.3;
+                Regulate_velocity(velocity_x, velocity_y, velocity_z)
 
                 ROS_INFO("drawing a ♥");
                 ROS_INFO("v_x: %f , v_y: %f, v_z: %f .", velocity_x, velocity_y, velocity_z);
