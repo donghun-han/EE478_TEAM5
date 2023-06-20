@@ -353,10 +353,12 @@ void run()
         
 
     }
+    
     else
     {
         ROS_INFO("mission mode 0.");
     }
+}
 
 int main(int argc, char **argv)
 {
