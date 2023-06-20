@@ -312,7 +312,13 @@ void run()
                 misssion_complete = true;
                 mission_mode = 0;
                 heart_idx = 0;
+
+		setpoint_vel.twist.linear.x = 0;
+            	setpoint_vel.twist.linear.y = 0;
+            	setpoint_vel.twist.linear.z = 0;
+            	local_vel_pub.publish(setpoint_vel);
             }
+		    
             else
             {
                 std::pair<double,double> waypoint = heart_points[heart_idx];
