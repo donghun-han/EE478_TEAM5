@@ -156,11 +156,11 @@ void run()
         }
 
         else {
-            velocity_x = 7.5* (home_x - cur_x);
-            velocity_y = 4* (home_y - cur_y);
-            velocity_z = 1.5* (home_z - cur_z);
+            velocity_x = 0.5* (home_x - cur_x);
+            velocity_y = 0.5* (home_y - cur_y);
+            velocity_z = 0.5* (home_z - cur_z);
 
-	    Regulate_velocity(velocity_x, velocity_y, velocity_z)
+	    Regulate_velocity(velocity_x, velocity_y, velocity_z);
 
 
             ROS_INFO("mission mode 2.");
@@ -195,7 +195,7 @@ void run()
             velocity_x = -7.5* (cur_image_height - target_height);
             velocity_y = 4* (cur_image_x - target_x);
             velocity_z = -1.5* (cur_image_y - target_y);
-	    Regulate_velocity(velocity_x, velocity_y, velocity_z)
+	    Regulate_velocity(velocity_x, velocity_y, velocity_z);
 
         
             // velocity control
@@ -244,11 +244,11 @@ void run()
             cur_y = cur_pose.pose.position.y;
             cur_z = cur_pose.pose.position.z; 
 
-            velocity_x = 7.5* (home_x - cur_x);
-            velocity_y = 4* (home_y - cur_y);
-            velocity_z = 1.5* (home_z - cur_z);
+            velocity_x = 0.5* (home_x - cur_x);
+            velocity_y = 0.5* (home_y - cur_y);
+            velocity_z = 0.5* (home_z - cur_z);
 
-	    Regulate_velocity(velocity_x, velocity_y, velocity_z)
+	    Regulate_velocity(velocity_x, velocity_y, velocity_z);
         
 
             ROS_INFO("mission mode 4.");
@@ -305,7 +305,7 @@ void run()
                 velocity_y = 4* (temp_target_y - cur_y);
                 velocity_z = 1.5* (temp_target_z - cur_z);
 
-                Regulate_velocity(velocity_x, velocity_y, velocity_z)
+                Regulate_velocity(velocity_x, velocity_y, velocity_z);
 
                 ROS_INFO("drawing a ♥");
                 ROS_INFO("v_x: %f , v_y: %f, v_z: %f .", velocity_x, velocity_y, velocity_z);
