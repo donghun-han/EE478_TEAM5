@@ -372,6 +372,9 @@ void run()
     }
 }
 
+    else ROS_INFO("mission mode 0.");
+}
+
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "gesture_out_subscriber");
@@ -475,4 +478,3 @@ int main(int argc, char **argv)
 
     return 0;
 }
-
