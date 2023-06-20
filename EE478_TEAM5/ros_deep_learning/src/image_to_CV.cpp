@@ -33,6 +33,9 @@ std::string topic_name;
 
 sensor_msgs::ImageConstPtr raw_image;
 
+int pic_index = 0;
+double pic_taken_time;
+
 
 // input image subscriber callback
 void img_callback( const sensor_msgs::ImageConstPtr input )
@@ -76,7 +79,12 @@ bool img_to_CV(std_srvs::SetBool::Request& request, std_srvs::SetBool::Response&
       		return false;
     	}
 
-	cv::imwrite("/home/usrg/test"+ std::to_string(ros::Time::now().toSec()) +".jpg", cv_ptr->image);
+	if (ros::Time::now().toSec() - pic_taken_time > 5){
+		pic_index++;
+		pic_taken_time = ros::Time::now().toSec();
+	}
+
+	cv::imwrite("/home/usrg/selfie"+ std::to_string(pic_index) +".jpg", cv_ptr->image);
 	return true;
 
 }
