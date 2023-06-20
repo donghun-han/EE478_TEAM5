@@ -27,6 +27,8 @@ float cur_image_height = 0.3;
 bool mission_complete = true;
 int mission_mode = 0;
 // 0 = default, 1 = move to target, 2 = move to home, 3 = take picture, 4: draw heart
+bool m4_home = false;
+int heart_idx = 0;
 
 bool is_takeoff = false;
 bool is_taken = false;
@@ -248,8 +250,127 @@ void run()
 
     else if (mission_mode == 4)
     {
+        if (m4_home != true)
+        {
+            // return to home first (but home_z=1.5)
+            home_x = 0.0;
+            home_y = 0.0;
+            home_z = 1.5;
+
+            cur_x = cur_pose.pose.position.x;
+            cur_y = cur_pose.pose.position.y;
+            cur_z = cur_pose.pose.position.z; 
+
+            velocity_x = 7.5* (home_x - cur_x);
+            velocity_y = 4* (home_y - cur_y);
+            velocity_z = 1.5* (home_z - cur_z);
         
+            if(velocity_x > 0.3)
+                velocity_x = 0.3;
+            if(velocity_x < -0.3)
+                velocity_x = -0.3;
+
+            if(velocity_y > 0.3)
+                velocity_y = 0.3;
+            if(velocity_y < -0.3)
+                velocity_y = -0.3;
+
+            if(velocity_z > 0.3)
+                velocity_z = 0.3;
+            if(velocity_z < -0.3)
+                velocity_z = -0.3;
+
+            ROS_INFO("mission mode 4.");
+            ROS_INFO("v_x: %f , v_y: %f, v_z: %f .", velocity_x, velocity_y, velocity_z);
+            setpoint_vel.twist.linear.x = velocity_x;
+            setpoint_vel.twist.linear.y = velocity_y;
+            setpoint_vel.twist.linear.z = velocity_z;
+
+            local_vel_pub.publish(setpoint_vel);
+            //is_taken = false; 
+            if (std::abs(home_x - cur_x) < 0.05 && std::abs(home_y - cur_y) < 0.05 && std::abs(home_z - cur_z) < 0.05)
+            {
+                m4_home = true;
+            }
+        }
+        
+        else 
+        {
+            // draw heart
+            std::vector<std::pair<double, double>> heart_points = {
+                {0.0, 0.2},    {-0.12, 0.3},   {-0.25, 0.25},
+                {-0.3, 0.1},   {-0.25, 0.0},   {-0.15, -0.1},
+                {0.0, -0.22},  {0.15, -0.1},   {0.25, 0.0},
+                {0.3, 0.1},    {0.25, 0.25},   {0.12, 0.3},   {0.0, 0.2},
+                {0.0, 0.0}};
+
+            double scale_factor = 2.0;
+            int heart_length = heart_points.size();
+
+            if (heart_idx >= heart_length)
+            {
+                misssion_complete = true;
+                mission_mode = 0;
+                heart_idx = 0;
+            }
+            else
+            {
+                std::pair<double,double> waypoint = heart_points[heart_idx];
+                // set a new target point
+                double temp_target_y = waypoint.first * scale_factor + home_y;
+                double temp_target_z = waypoint.second * scale_factor + home_z;
+
+                // set velocity
+                cur_x = cur_pose.pose.position.x;
+                cur_y = cur_pose.pose.position.y;
+                cur_z = cur_pose.pose.position.z; 
+
+                velocity_x = 0;
+                velocity_y = 4* (temp_target_y - cur_y);
+                velocity_z = 1.5* (temp_target_z - cur_z);
+
+                if(velocity_y > 0.3)
+                    velocity_y = 0.3;
+                if(velocity_y < -0.3)
+                    velocity_y = -0.3;
+
+                if(velocity_z > 0.3)
+                    velocity_z = 0.3;
+                if(velocity_z < -0.3)
+                    velocity_z = -0.3;
+
+                ROS_INFO("drawing a ♥");
+                ROS_INFO("v_x: %f , v_y: %f, v_z: %f .", velocity_x, velocity_y, velocity_z);
+                setpoint_vel.twist.linear.x = velocity_x;
+                setpoint_vel.twist.linear.y = velocity_y;
+                setpoint_vel.twist.linear.z = velocity_z;
+
+                local_vel_pub.publish(setpoint_vel);
+
+                // check if the current position is close enough to the target position
+                if (std::abs(temp_target_y - cur_y) < 0.05 && std::abs(temp_target_z - cur_z) < 0.05)
+                {
+                    // pause for a moment before moving to the next target position
+                    // ros::Rate loop_rate(10); // 10 Hz
+                    // for (int i = 0; i < 10; ++i)
+                    // {
+                    //     if (ros::isShuttingDown())
+                    //         break;
+                    //     loop_rate.sleep();
+                    // }
+                    heart_idx++;
+                }
+            }
+        }
+        
+
     }
+    
+    else
+    {
+        ROS_INFO("mission mode 0.");
+    }
+}
 
     else ROS_INFO("mission mode 0.");
 }
